@@ -17,5 +17,8 @@ teedy-importer-win.exe
 docs/*
 !docs/.gitkeep
 
+# Dev persistence (H2 DB, Lucene index, uploaded files when using mvn jetty:run)
+data/
+
 #macos
 .DS_Store
