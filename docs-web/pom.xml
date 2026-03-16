@@ -176,16 +176,30 @@
         </resources>
 
         <plugins>
+          <!-- In dev, expose frontend at webapp root so / serves index.html -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-war-plugin</artifactId>
+            <configuration>
+              <webResources>
+                <resource>
+                  <directory>${project.basedir}/src/main/webapp/src</directory>
+                  <targetPath>.</targetPath>
+                </resource>
+              </webResources>
+            </configuration>
+          </plugin>
           <plugin>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-maven-plugin</artifactId>
             <configuration>
               <systemProperties>
                 <application.mode>dev</application.mode>
-                <docs.home>../data/docs</docs.home>
+                <!-- Absolute path so DB and Lucene storage persist across restarts -->
+                <docs.home>${project.basedir}/../data/docs</docs.home>
               </systemProperties>
               <webApp>
-                <contextPath>/docs-web</contextPath>
+                <contextPath>/</contextPath>
                 <overrideDescriptor>${project.basedir}/src/dev/main/webapp/web-override.xml</overrideDescriptor>
               </webApp>
             </configuration>
