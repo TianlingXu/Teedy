@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Teedy Custom Metrics Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.github.io/schema/ruleset_2_0_0.xsd">
+
+  <description>
+    Ruleset for lab metrics: LoC, CC, WMC, CBO, LCOM-related checks.
+  </description>
+
+  <!-- LoC -->
+  <rule ref="category/java/design.xml/NcssCount">
+    <properties>
+        <!-- 按你课程要求可调阈值 -->
+        <property name="classReportLevel" value="1000"/>
+        <property name="methodReportLevel" value="100"/>
+    </properties>
+  </rule>
+  <!-- CC -->
+  <rule ref="category/java/design.xml/CyclomaticComplexity"/>
+
+  <!-- WMC (approx) -->
+  <rule ref="category/java/design.xml/TooManyMethods"/>
+
+  <!-- CBO -->
+  <rule ref="category/java/design.xml/CouplingBetweenObjects"/>
+
+  <!-- LCOM-related (approx) -->
+  <rule ref="category/java/design.xml/GodClass"/>
+</ruleset>
