@@ -45,7 +45,7 @@ pipeline {
                     containers.each { c ->
                         sh "docker stop ${c.name} || true"
                         sh "docker rm ${c.name} || true"
-                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").run("-name ${c.name} -d -p ${c.port}")
+                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").run("--name ${c.name} -p ${c.port}")
                     }
                     sh 'docker ps --filter "name=teedy-container"'
                 }
