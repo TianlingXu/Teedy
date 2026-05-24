@@ -1,47 +1,55 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Clean') {
-            steps {
-                sh 'mvn clean'
-            }
-        }
-
-        stage('Compile') {
-            steps {
-                sh 'mvn compile -Dpmd.skip=true'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh 'mvn test -Dpmd.skip=true -Dmaven.test.failure.ignore=true'
-            }
-        }
-
-        stage('Site') {
-            steps {
-                sh 'mvn site -Dpmd.skip=true'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh 'mvn package -DskipTests -Dpmd.skip=true'
-            }
-        }
+    environment {
+        DOCKER_HUB_CREDENTIALS = 'dockerhub_credentials'
+        DOCKER_IMAGE = 'tianlingxu/teedy-app'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
 
-    post {
-        always {
-            junit '**/target/surefire-reports/*.xml'
+    stages {
+        stage('Build') {
+            steps {
+                checkout scm
+                sh 'mvn -B -DskipTests clean package'
+            }
+        }
 
-            archiveArtifacts artifacts: '**/target/site/**/*.*', fingerprint: true
-            archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
-            archiveArtifacts artifacts: '**/target/*.war', fingerprint: true
-            archiveArtifacts artifacts: '**/target/**/*.jar', fingerprint: true
-            archiveArtifacts artifacts: '**/target/**/*.war', fingerprint: true
+        stage('Building image') {
+            steps {
+                script {
+                    docker.build("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}")
+                }
+            }
+        }
+
+        stage('Upload image') {
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', DOCKER_HUB_CREDENTIALS) {
+                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push()
+                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").push('latest')
+                    }
+                }
+            }
+        }
+
+        stage('Run containers') {
+            steps {
+                script {
+                    def containers = [
+                        [name: 'teedy-container-8082', port: '8082:8080'],
+                        [name: 'teedy-container-8083', port: '8083:8080'],
+                        [name: 'teedy-container-8084', port: '8084:8080']
+                    ]
+                    containers.each { c ->
+                        sh "docker stop ${c.name} || true"
+                        sh "docker rm ${c.name} || true"
+                        docker.image("${env.DOCKER_IMAGE}:${env.DOCKER_TAG}").run("-name ${c.name} -d -p ${c.port}")
+                    }
+                    sh 'docker ps --filter "name=teedy-container"'
+                }
+            }
         }
     }
 }
